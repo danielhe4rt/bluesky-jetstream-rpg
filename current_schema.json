@@ -1,0 +1,224 @@
+{
+  "tables": {
+    "characters": {
+      "fields": [
+        [
+          "current_experience",
+          "int",
+          false
+        ],
+        [
+          "experience_to_next_level",
+          "int",
+          false
+        ],
+        [
+          "level",
+          "int",
+          false
+        ],
+        [
+          "name",
+          "text",
+          false
+        ],
+        [
+          "user_id",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "current_experience",
+        "level",
+        "user_id",
+        "experience_to_next_level",
+        "name"
+      ],
+      "types_by_name": {
+        "experience_to_next_level": "int",
+        "current_experience": "int",
+        "level": "int",
+        "user_id": "text",
+        "name": "text"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "user_id"
+      ],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "characters_experience": {
+      "fields": [
+        [
+          "current_experience",
+          "counter",
+          false
+        ],
+        [
+          "user_id",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "user_id",
+        "current_experience"
+      ],
+      "types_by_name": {
+        "current_experience": "counter",
+        "user_id": "text"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "user_id"
+      ],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "user_events": {
+      "fields": [
+        [
+          "event_at",
+          "timestamp",
+          false
+        ],
+        [
+          "event_data",
+          "frozen<map<text, text>>",
+          false
+        ],
+        [
+          "event_id",
+          "text",
+          false
+        ],
+        [
+          "event_type",
+          "text",
+          false
+        ],
+        [
+          "user_id",
+          "text",
+          false
+        ],
+        [
+          "xp",
+          "int",
+          false
+        ]
+      ],
+      "field_names": [
+        "xp",
+        "user_id",
+        "event_id",
+        "event_data",
+        "event_at",
+        "event_type"
+      ],
+      "types_by_name": {
+        "user_id": "text",
+        "event_type": "text",
+        "event_data": "frozen<map<text, text>>",
+        "event_at": "timestamp",
+        "xp": "int",
+        "event_id": "text"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "user_id"
+      ],
+      "clustering_keys": [
+        "event_at",
+        "event_type"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    }
+  },
+  "udts": {},
+  "materialized_views": {
+    "user_events_by_bluesky_id": {
+      "fields": [
+        [
+          "event_at",
+          "timestamp",
+          false
+        ],
+        [
+          "event_data",
+          "frozen<map<text, text>>",
+          false
+        ],
+        [
+          "event_id",
+          "text",
+          false
+        ],
+        [
+          "event_type",
+          "text",
+          false
+        ],
+        [
+          "user_id",
+          "text",
+          false
+        ],
+        [
+          "xp",
+          "int",
+          false
+        ]
+      ],
+      "field_names": [
+        "user_id",
+        "event_at",
+        "event_id",
+        "event_type",
+        "event_data",
+        "xp"
+      ],
+      "types_by_name": {
+        "event_at": "timestamp",
+        "event_id": "text",
+        "event_data": "frozen<map<text, text>>",
+        "event_type": "text",
+        "user_id": "text",
+        "xp": "int"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "event_id"
+      ],
+      "clustering_keys": [
+        "event_at",
+        "event_type",
+        "user_id"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    }
+  },
+  "keyspace_name": "fodase"
+}

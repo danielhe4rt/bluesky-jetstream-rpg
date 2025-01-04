@@ -1,11 +1,10 @@
-use std::collections::HashMap;
-use std::sync::Arc;
+use crate::leveling::LevelResponse;
+use crate::models::{BlueskyEventTracker, EventTracker};
+use charybdis::operations::{Find, Insert};
 use charybdis::types::Timestamp;
 use scylla::CachingSession;
-use charybdis::operations::{Find, Insert};
-use scylla::_macro_internal::SerializeRow;
-use crate::leveling::LevelResponse;
-use crate::models::{Character, EventTracker};
+use std::collections::HashMap;
+use std::sync::Arc;
 
 pub struct EventRepository {
     pub session: Arc<CachingSession>,
@@ -35,5 +34,21 @@ impl EventRepository {
             .execute(&self.session)
             .await
             .expect("Failed to insert event");
+    }
+
+    pub async fn find_event_by_partition_key(&self, event_id: String) -> Option<BlueskyEventTracker> {
+        let event = BlueskyEventTracker {
+            event_id,
+            ..Default::default()
+        };
+
+        event.find_by_partition_key()
+            .execute(&self.session)
+            .await
+            .unwrap()
+            .try_collect()
+            .await
+            .unwrap()
+            .pop()
     }
 }

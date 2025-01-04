@@ -1,14 +1,14 @@
-use std::sync::Arc;
-use atrium_api::record::KnownRecord;
-use atrium_api::record::KnownRecord::AppBskyFeedPost;
-use jetstream_oxide::events::commit::CommitData;
-use jetstream_oxide::events::EventInfo;
-use paris::info;
 use crate::events::create::create_post::CreatePostEvent;
 use crate::events::create::like_post::LikePostEvent;
 use crate::leveling::{calculate_experience, LevelResponse};
 use crate::models::{Character, CharacterExperience};
 use crate::repositories::DatabaseRepository;
+use atrium_api::record::KnownRecord;
+use atrium_api::record::KnownRecord::AppBskyFeedPost;
+use jetstream_oxide::events::commit::CommitData;
+use jetstream_oxide::events::EventInfo;
+use std::sync::Arc;
+use paris::info;
 
 mod create_post;
 mod like_post;
@@ -30,7 +30,7 @@ pub async fn create_event_handler(repository: &Arc<DatabaseRepository>, user_inf
 
             persist_character_changes(repository, &mut character, character_experience, new_experience_dto).await;
 
-            //info!("[Post] User {} gained {} experience", user_info.did.to_string(), gained_experience);
+            info!("[Created][Post] User {} gained {} experience", user_info.did.to_string(), gained_experience);
         }
         KnownRecord::AppBskyFeedLike(record) => {
             let mut like = LikePostEvent::new();
@@ -50,7 +50,7 @@ pub async fn create_event_handler(repository: &Arc<DatabaseRepository>, user_inf
                 new_experience_dto.clone()
             ).await;
 
-            //info!("[Like] User {} gained {} experience", user_info.did.to_string(), gained_experience);
+            info!("[Created][Like] User {} gained {} experience", user_info.did.to_string(), gained_experience);
         }
         KnownRecord::AppBskyFeedRepost(record) => {
             let mut repost = repost::RepostEvent::new();
@@ -63,7 +63,7 @@ pub async fn create_event_handler(repository: &Arc<DatabaseRepository>, user_inf
             );
 
             persist_character_changes(repository, &mut character, character_experience, new_experience_dto).await;
-            //info!("[Repost] User {} gained {} experience", user_info.did.to_string(), gained_experience);
+            info!("[Created][Repost] User {} gained {} experience", user_info.did.to_string(), gained_experience);
         }
         _ => {}
     }

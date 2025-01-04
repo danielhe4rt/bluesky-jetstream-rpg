@@ -19,6 +19,7 @@ pub struct EventTracker {
     pub event_at: Timestamp
 }
 
+#[derive(Default)]
 #[charybdis_view_model(
     table_name=user_events_by_bluesky_id,
     base_table=user_events,
