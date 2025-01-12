@@ -41,11 +41,10 @@ pub struct LevelResponse {
 /// ```
 pub fn calculate_experience(current_experience: i32, new_experience: i32) -> LevelResponse {
     // Sum up total XP so far.
-    let total_experience = current_experience.saturating_add(new_experience);
 
     // Figure out old level vs. new level to track "levels gained."
     let old_level = get_level_from_xp(current_experience);
-    let new_level = get_level_from_xp(total_experience);
+    let new_level = get_level_from_xp(new_experience);
 
     let level = new_level.min(LEVEL_CAP);
 
@@ -55,7 +54,7 @@ pub fn calculate_experience(current_experience: i32, new_experience: i32) -> Lev
     } else {
         // The XP needed to *reach* the next level.
         let next_level_xp = xp_for_level(level + 1);
-        let xp_diff = next_level_xp.saturating_sub(total_experience);
+        let xp_diff = next_level_xp.saturating_sub(new_experience);
 
         // For progress percentage, we see:
         //  current_level_xp = xp_for_level(level)
@@ -64,7 +63,7 @@ pub fn calculate_experience(current_experience: i32, new_experience: i32) -> Lev
         //  progress = (total_experience - current_level_xp) / range
         let current_level_xp = xp_for_level(level);
         let range = next_level_xp.saturating_sub(current_level_xp).max(1);
-        let progress = (total_experience.saturating_sub(current_level_xp)) as f32 / range as f32;
+        let progress = (new_experience.saturating_sub(current_level_xp)) as f32 / range as f32;
 
         (xp_diff, progress)
     };
@@ -74,7 +73,7 @@ pub fn calculate_experience(current_experience: i32, new_experience: i32) -> Lev
 
     LevelResponse {
         level,
-        experience: total_experience,
+        experience: new_experience,
         experience_to_next_level,
         levels_gained,
         progress_percentage,
@@ -127,7 +126,5 @@ pub fn get_level_from_xp(xp: i32) -> i32 {
     //   => n <= 1 + ((xp - BASE_EXPERIENCE) / EXPERIENCE_PER_LEVEL)
     //
     // We take the integer floor of that expression.
-    let raw_level = 1 + (xp - BASE_EXPERIENCE) / EXPERIENCE_PER_LEVEL;
-    raw_level
+    1 + (xp - BASE_EXPERIENCE) / EXPERIENCE_PER_LEVEL
 }
-

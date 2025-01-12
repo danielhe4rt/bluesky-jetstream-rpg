@@ -1,24 +1,24 @@
 {
   "tables": {
-    "characters": {
+    "user_events": {
       "fields": [
         [
-          "current_experience",
-          "int",
+          "event_at",
+          "timestamp",
           false
         ],
         [
-          "experience_to_next_level",
-          "int",
+          "event_data",
+          "frozen<map<text, text>>",
           false
         ],
         [
-          "level",
-          "int",
+          "event_id",
+          "text",
           false
         ],
         [
-          "name",
+          "event_type",
           "text",
           false
         ],
@@ -26,21 +26,28 @@
           "user_id",
           "text",
           false
+        ],
+        [
+          "xp",
+          "int",
+          false
         ]
       ],
       "field_names": [
-        "current_experience",
-        "level",
+        "xp",
+        "event_data",
+        "event_type",
+        "event_at",
         "user_id",
-        "experience_to_next_level",
-        "name"
+        "event_id"
       ],
       "types_by_name": {
-        "experience_to_next_level": "int",
-        "current_experience": "int",
-        "level": "int",
-        "user_id": "text",
-        "name": "text"
+        "event_at": "timestamp",
+        "event_data": "frozen<map<text, text>>",
+        "event_type": "text",
+        "xp": "int",
+        "event_id": "text",
+        "user_id": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -48,7 +55,10 @@
       "partition_keys": [
         "user_id"
       ],
-      "clustering_keys": [],
+      "clustering_keys": [
+        "event_at",
+        "event_type"
+      ],
       "static_columns": [],
       "global_secondary_indexes": [],
       "local_secondary_indexes": [],
@@ -87,25 +97,25 @@
       "local_secondary_indexes": [],
       "table_options": null
     },
-    "user_events": {
+    "characters": {
       "fields": [
         [
-          "event_at",
-          "timestamp",
+          "current_experience",
+          "int",
           false
         ],
         [
-          "event_data",
-          "frozen<map<text, text>>",
+          "experience_to_next_level",
+          "int",
           false
         ],
         [
-          "event_id",
-          "text",
+          "level",
+          "int",
           false
         ],
         [
-          "event_type",
+          "name",
           "text",
           false
         ],
@@ -113,28 +123,21 @@
           "user_id",
           "text",
           false
-        ],
-        [
-          "xp",
-          "int",
-          false
         ]
       ],
       "field_names": [
-        "xp",
+        "experience_to_next_level",
+        "level",
         "user_id",
-        "event_id",
-        "event_data",
-        "event_at",
-        "event_type"
+        "current_experience",
+        "name"
       ],
       "types_by_name": {
-        "user_id": "text",
-        "event_type": "text",
-        "event_data": "frozen<map<text, text>>",
-        "event_at": "timestamp",
-        "xp": "int",
-        "event_id": "text"
+        "name": "text",
+        "experience_to_next_level": "int",
+        "level": "int",
+        "current_experience": "int",
+        "user_id": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -142,10 +145,7 @@
       "partition_keys": [
         "user_id"
       ],
-      "clustering_keys": [
-        "event_at",
-        "event_type"
-      ],
+      "clustering_keys": [],
       "static_columns": [],
       "global_secondary_indexes": [],
       "local_secondary_indexes": [],
@@ -188,20 +188,20 @@
         ]
       ],
       "field_names": [
-        "user_id",
-        "event_at",
+        "xp",
         "event_id",
-        "event_type",
         "event_data",
-        "xp"
+        "event_at",
+        "event_type",
+        "user_id"
       ],
       "types_by_name": {
+        "user_id": "text",
+        "event_data": "frozen<map<text, text>>",
+        "xp": "int",
         "event_at": "timestamp",
         "event_id": "text",
-        "event_data": "frozen<map<text, text>>",
-        "event_type": "text",
-        "user_id": "text",
-        "xp": "int"
+        "event_type": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -220,5 +220,5 @@
       "table_options": null
     }
   },
-  "keyspace_name": "fodase"
+  "keyspace_name": "bsky_rpg"
 }

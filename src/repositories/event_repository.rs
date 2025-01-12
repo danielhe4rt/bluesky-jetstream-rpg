@@ -1,9 +1,9 @@
+use crate::events::dto::NewEventDTO;
 use crate::leveling::LevelResponse;
 use crate::models::{BlueskyEventTracker, EventTracker};
 use charybdis::operations::{Find, Insert};
 use charybdis::types::Timestamp;
 use scylla::CachingSession;
-use std::collections::HashMap;
 use std::sync::Arc;
 
 pub struct EventRepository {
@@ -17,16 +17,14 @@ impl EventRepository {
         }
     }
 
-    pub async fn insert_event(&self, user_id: String, event_id: String, event_at: u64, level_response: LevelResponse) {
-        let map = HashMap::new();
-
+    pub async fn insert_event(&self, payload: &NewEventDTO, level_response: &LevelResponse) {
         let event = EventTracker {
-            user_id,
-            event_type: "repost".to_string(),
-            event_id,
-            event_data: map,
+            user_id: payload.user_did.to_string(),
+            event_type: payload.event_type.to_string(),
+            event_id: payload.event_id.to_string(),
+            event_data: payload.context.clone(),
             xp: level_response.experience,
-            event_at: Timestamp::from_timestamp_nanos(event_at as i64),
+            event_at: Timestamp::from_timestamp_nanos(payload.posted_at as i64),
         };
 
         event
@@ -36,13 +34,17 @@ impl EventRepository {
             .expect("Failed to insert event");
     }
 
-    pub async fn find_event_by_partition_key(&self, event_id: String) -> Option<BlueskyEventTracker> {
+    pub async fn _find_event_by_partition_key(
+        &self,
+        event_id: String,
+    ) -> Option<BlueskyEventTracker> {
         let event = BlueskyEventTracker {
             event_id,
             ..Default::default()
         };
 
-        event.find_by_partition_key()
+        event
+            .find_by_partition_key()
             .execute(&self.session)
             .await
             .unwrap()

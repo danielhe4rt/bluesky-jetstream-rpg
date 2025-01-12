@@ -3,27 +3,24 @@
 mod events;
 mod leveling;
 
+mod crawler;
 mod models;
 mod repositories;
 
 use crate::events::events_handler;
 use atrium_api::types::string::Nsid;
-use std::sync::Arc;
-
 use jetstream_oxide::{
-    events::JetstreamEvent::Commit,
-    DefaultJetstreamEndpoints,
-    JetstreamCompression,
-    JetstreamConfig,
-    JetstreamConnector,
+    events::JetstreamEvent::Commit, DefaultJetstreamEndpoints, JetstreamCompression,
+    JetstreamConfig, JetstreamConnector,
 };
 use paris::{info, Logger};
 use scylla::{CachingSession, SessionBuilder};
 
+use std::sync::Arc;
+
 #[tokio::main]
 async fn main() {
     Logger::new();
-
 
     let config = JetstreamConfig {
         endpoint: DefaultJetstreamEndpoints::USEastTwo.into(),
@@ -31,19 +28,26 @@ async fn main() {
             Nsid::new("app.bsky.feed.post".to_string()).expect("Failed to create NSID"),
             Nsid::new("app.bsky.feed.like".to_string()).expect("Failed to create NSID"),
             Nsid::new("app.bsky.feed.repost".to_string()).expect("Failed to create NSID"),
-        ].into(),
+        ],
         wanted_dids: vec![],
         compression: JetstreamCompression::Zstd,
         cursor: None,
     };
 
     let session = SessionBuilder::new()
-        .known_nodes(vec!["localhost:19042", "localhost:19043", "localhost:19044"])
+        .known_nodes(vec![
+            "localhost:19042",
+            "localhost:19043",
+            "localhost:19044",
+        ])
         .build()
         .await
         .expect("Failed to create Scylla session");
 
-    session.use_keyspace("fodase", false).await.expect("Failed to use keyspace");
+    session
+        .use_keyspace("bsky_rpg", false)
+        .await
+        .expect("Failed to use keyspace");
 
     let caching_session = Arc::new(CachingSession::from(session, 50));
 
@@ -55,10 +59,11 @@ async fn main() {
 
     info!("Starting Jetstream listener");
 
-    let repository = Arc::new(repositories::DatabaseRepository::new(Arc::clone(&caching_session)));
+    let repository = Arc::new(repositories::DatabaseRepository::new(Arc::clone(
+        &caching_session,
+    )));
 
     while let Ok(event) = receiver.recv_async().await {
-
         if let Commit(commit) = event {
             events_handler(&repository, commit).await;
         }

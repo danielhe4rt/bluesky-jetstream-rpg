@@ -1,82 +1,87 @@
 use crate::events::create::create_post::CreatePostEvent;
 use crate::events::create::like_post::LikePostEvent;
+use crate::events::create::repost::RepostEvent;
+use crate::events::dto::NewEventDTO;
+use crate::events::CreateEventPayload;
 use crate::leveling::{calculate_experience, LevelResponse};
-use crate::models::{Character, CharacterExperience};
 use crate::repositories::DatabaseRepository;
 use atrium_api::record::KnownRecord;
 use atrium_api::record::KnownRecord::AppBskyFeedPost;
-use jetstream_oxide::events::commit::CommitData;
-use jetstream_oxide::events::EventInfo;
-use std::sync::Arc;
 use paris::info;
+use std::sync::Arc;
+use KnownRecord::{AppBskyFeedLike, AppBskyFeedRepost};
 
-mod create_post;
+pub mod create_post;
 mod like_post;
 mod repost;
 
-pub async fn create_event_handler(repository: &Arc<DatabaseRepository>, user_info: EventInfo, commit: CommitData) {
-    let mut character = repository.character.find_by_partition_key(user_info.did.to_string()).await;
-    let character_experience = repository.character.find_character_experience_by_partition_key(user_info.did.to_string()).await;
-    match commit.record {
-        AppBskyFeedPost(record) => {
-            let mut post = CreatePostEvent::new();
-            post.handle(KnownRecord::AppBskyFeedPost(record));
-            let gained_experience = post.calculate_exp();
+#[async_trait::async_trait]
+trait CreateEventHandler {
+    async fn handle(
+        &mut self,
+        repository: &Arc<DatabaseRepository>,
+        payload: &NewEventDTO,
+    ) -> LevelResponse {
+        // find all the data we need
+        let mut character = repository
+            .character
+            .find_by_partition_key(payload.user_did.clone())
+            .await;
+        let character_experience = repository
+            .character
+            .find_character_experience_by_partition_key(payload.user_did.clone())
+            .await;
 
-            let new_experience_dto = calculate_experience(
-                character_experience.current_experience.0 as i32,
-                gained_experience,
-            );
+        // calculate the experience
+        let current_experience = character_experience.get_experience();
+        let action_gained_experience = self.calculate_exp(payload);
+        let new_experience = current_experience.saturating_add(action_gained_experience);
 
-            persist_character_changes(repository, &mut character, character_experience, new_experience_dto).await;
+        let leveling_response_dto = calculate_experience(current_experience, new_experience);
 
-            info!("[Created][Post] User {} gained {} experience", user_info.did.to_string(), gained_experience);
-        }
-        KnownRecord::AppBskyFeedLike(record) => {
-            let mut like = LikePostEvent::new();
-            like.handle(KnownRecord::AppBskyFeedLike(record));
-            let gained_experience = like.calculate_exp();
+        // persist the changes
+        repository
+            .character
+            .increment_character_experience(character_experience, leveling_response_dto.clone())
+            .await;
 
-            let new_experience_dto = calculate_experience(
-                character_experience.current_experience.0 as i32,
-                gained_experience,
-            );
+        repository
+            .character
+            .update_character(&mut character, leveling_response_dto.clone())
+            .await;
 
-            persist_character_changes(repository, &mut character, character_experience, new_experience_dto.clone()).await;
-            repository.event.insert_event(
-                user_info.did.to_string(),
-                "like".to_string(),
-                user_info.time_us,
-                new_experience_dto.clone()
-            ).await;
+        repository
+            .event
+            .insert_event(&payload, &leveling_response_dto)
+            .await;
 
-            info!("[Created][Like] User {} gained {} experience", user_info.did.to_string(), gained_experience);
-        }
-        KnownRecord::AppBskyFeedRepost(record) => {
-            let mut repost = repost::RepostEvent::new();
-            repost.handle(KnownRecord::AppBskyFeedRepost(record));
-            let gained_experience = repost.calculate_exp();
-
-            let new_experience_dto = calculate_experience(
-                character_experience.current_experience.0 as i32,
-                gained_experience,
-            );
-
-            persist_character_changes(repository, &mut character, character_experience, new_experience_dto).await;
-            info!("[Created][Repost] User {} gained {} experience", user_info.did.to_string(), gained_experience);
-        }
-        _ => {}
+        leveling_response_dto
     }
+
+    fn calculate_exp(&self, payload: &NewEventDTO) -> i32;
 }
 
-async fn persist_character_changes(repository: &Arc<DatabaseRepository>, mut character: &mut Character, character_experience: CharacterExperience, new_experience_dto: LevelResponse) {
-    repository.character.increment_character_experience(
-        character_experience,
-        new_experience_dto.clone(),
-    ).await;
+pub async fn create_event_handler(
+    repository: &Arc<DatabaseRepository>,
+    payload: CreateEventPayload,
+) {
+    let event_payload = NewEventDTO::from(&payload);
 
-    repository.character.update_character(
-        &mut character,
-        new_experience_dto,
-    ).await;
+    let response = select_event_handler(&payload.commit_data.record)
+        .handle(repository, &event_payload)
+        .await;
+
+    info!(
+        "[Created][{}] User {} gained {} experience",
+        event_payload.event_type, event_payload.user_did, response.experience
+    );
+}
+
+fn select_event_handler(record: &KnownRecord) -> Box<dyn CreateEventHandler + Send + Sync> {
+    match record {
+        AppBskyFeedPost(_) => Box::new(CreatePostEvent::new()),
+        AppBskyFeedLike(_) => Box::new(LikePostEvent::new()),
+        AppBskyFeedRepost(_) => Box::new(RepostEvent::new()),
+        _ => panic!("Unknown event type"),
+    }
 }

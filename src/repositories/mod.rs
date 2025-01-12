@@ -1,10 +1,10 @@
-mod character_repository;
-mod event_repository;
+pub mod character_repository;
+pub mod event_repository;
 
-use std::sync::Arc;
-use scylla::CachingSession;
 use crate::repositories::character_repository::CharacterRepository;
 use crate::repositories::event_repository::EventRepository;
+use scylla::CachingSession;
+use std::sync::Arc;
 
 pub struct DatabaseRepository {
     pub character: CharacterRepository,

@@ -6,6 +6,13 @@
   * clear the current event list for the user
   * add all events and setup the user experience
 
+* DTO's for each event type must be needed to match the Event from Jetstream and from the API. 
+  * Post
+  * Like
+  * Retweet
+
+
+
 ## Events
 
 * Post
