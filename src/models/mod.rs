@@ -1,5 +1,9 @@
+pub mod character;
+
 use charybdis::macros::{charybdis_model, charybdis_view_model};
 use charybdis::types::{Counter, Frozen, Int, Map, Text, Timestamp};
+
+// SELECT * FROM user_events WHERE event_id = 1;
 
 #[charybdis_model(
     table_name = user_events,
@@ -34,20 +38,7 @@ pub struct BlueskyEventTracker {
     pub event_at: Timestamp,
 }
 
-#[derive(Default)]
-#[charybdis_model(
-    table_name = characters,
-    partition_keys = [user_id],
-    clustering_keys = []
-)]
-pub struct Character {
-    pub user_id: Text,
-    pub name: Text,
-    pub current_experience: Int,
-    pub experience_to_next_level: Int,
-    pub level: Int,
-}
-
+// Lightweight Transactions = LWT = IF NOT EXISTS
 #[charybdis_model(
     table_name = characters_experience,
     partition_keys = [user_id],
