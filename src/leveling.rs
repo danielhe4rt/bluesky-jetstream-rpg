@@ -1,11 +1,15 @@
+use atrium_api::app::bsky::actor::defs::ProfileViewDetailed;
+
 /// The maximum level a user can attain.
-pub const LEVEL_CAP: i32 = 1000;
+pub const LEVEL_CAP: i32 = 100000;
 
 /// How many XP are required for each level after the base.
 pub const EXPERIENCE_PER_LEVEL: i32 = 100;
 
 /// How many XP you need to reach Level 1.
 pub const BASE_EXPERIENCE: i32 = 50;
+
+pub const POST_EVENT_XP: i32 = 30;
 
 /// A response struct that includes additional metadata about leveling.
 #[derive(Debug, Default, Clone)]
@@ -17,10 +21,10 @@ pub struct LevelResponse {
     /// The XP required to reach the *next* level. Zero if already at or above `LEVEL_CAP`.
     pub experience_to_next_level: i32,
     /// How many levels the user gained in this single experience increment.
-    pub levels_gained: i32,
+    pub _levels_gained: i32,
     /// A float (0.0 ..= 1.0) representing how far the user is from `level` to `level + 1`.
     /// If `level` = `LEVEL_CAP`, this can safely be 1.0 (or 0.0, depending on your preference).
-    pub progress_percentage: f32,
+    pub _progress_percentage: f32,
 }
 
 /// Calculate new level/XP state, given the current XP and newly gained XP.
@@ -54,7 +58,6 @@ pub fn calculate_experience(current_experience: i32, new_experience: i32) -> Lev
     } else {
         // The XP needed to *reach* the next level.
         let next_level_xp = xp_for_level(level + 1);
-        let xp_diff = next_level_xp.saturating_sub(new_experience);
 
         // For progress percentage, we see:
         //  current_level_xp = xp_for_level(level)
@@ -65,18 +68,18 @@ pub fn calculate_experience(current_experience: i32, new_experience: i32) -> Lev
         let range = next_level_xp.saturating_sub(current_level_xp).max(1);
         let progress = (new_experience.saturating_sub(current_level_xp)) as f32 / range as f32;
 
-        (xp_diff, progress)
+        (next_level_xp, progress)
     };
 
     // How many levels were gained in this single increment?
-    let levels_gained = (new_level - old_level).max(0);
+    let _levels_gained = (new_level - old_level).max(0);
 
     LevelResponse {
         level,
         experience: new_experience,
         experience_to_next_level,
-        levels_gained,
-        progress_percentage,
+        _levels_gained,
+        _progress_percentage: progress_percentage,
     }
 }
 
@@ -127,4 +130,18 @@ pub fn get_level_from_xp(xp: i32) -> i32 {
     //
     // We take the integer floor of that expression.
     1 + (xp - BASE_EXPERIENCE) / EXPERIENCE_PER_LEVEL
+}
+
+/// Calculate the base level of a user based on their Bsky profile
+///
+/// # Arguments
+///
+/// * `profile`: &ProfileViewDetailed - The profile to calculate the base level from.
+///
+/// returns: LevelResponse
+pub fn get_base_level_from_bsky_profile(profile: &ProfileViewDetailed) -> LevelResponse {
+    // TODO: implement a way to list all likes sent by an account.
+    let experience = profile.posts_count.unwrap() as i32 * POST_EVENT_XP;
+
+    calculate_experience(0, experience)
 }
