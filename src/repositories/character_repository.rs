@@ -1,5 +1,6 @@
 use crate::leveling::LevelResponse;
-use crate::models::{Character, CharacterExperience};
+use crate::models::character::Character;
+use crate::models::CharacterExperience;
 use charybdis::operations::{Find, Insert};
 use charybdis::types::Counter;
 use scylla::CachingSession;
@@ -15,52 +16,42 @@ impl CharacterRepository {
             session: connection,
         }
     }
-    pub async fn find_by_partition_key(&self, user_id: String) -> Character {
+    pub async fn find_by_partition_key(&self, user_id: String) -> Option<Character> {
         let character = Character {
             user_id,
             ..Default::default()
         };
 
         character
-            .find_by_partition_key()
+            .maybe_find_by_primary_key()
             .execute(&self.session)
             .await
             .unwrap()
-            .try_collect()
-            .await
-            .unwrap()
-            .pop()
-            .unwrap_or(character)
     }
 
     pub async fn find_character_experience_by_partition_key(
         &self,
         user_id: String,
-    ) -> CharacterExperience {
+    ) -> Option<CharacterExperience> {
         let character_experience = CharacterExperience {
             user_id,
             current_experience: Counter(0),
         };
 
         character_experience
-            .find_by_partition_key()
+            .maybe_find_by_primary_key()
             .execute(&self.session)
             .await
             .unwrap()
-            .try_collect()
-            .await
-            .unwrap()
-            .pop()
-            .unwrap_or(character_experience)
     }
 
     pub async fn increment_character_experience(
         &self,
         character_experience: CharacterExperience,
-        response: LevelResponse,
+        experience_points: i64,
     ) {
         character_experience
-            .increment_current_experience(response.experience as i64)
+            .increment_current_experience(experience_points)
             .execute(&self.session)
             .await
             .expect("Failed to increment experience");

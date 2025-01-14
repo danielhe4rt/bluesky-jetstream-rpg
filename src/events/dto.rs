@@ -24,10 +24,10 @@ impl From<&CreateEventPayload> for NewEventDTO {
                 if let Some(embed) = embed {
                     if let Refs(RecordEmbedRefs::AppBskyEmbedImagesMain(embed_image)) = embed {
                         has_image = true;
-                        image_has_alt_text = !embed_image
+                        image_has_alt_text = embed_image
                             .images
                             .iter()
-                            .find(|image| image.alt.is_empty())
+                            .find(|image| !image.alt.is_empty())
                             .is_some();
                     }
                 }

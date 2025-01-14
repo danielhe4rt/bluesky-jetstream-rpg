@@ -6,7 +6,6 @@ use crate::events::create::create_event_handler;
 use crate::repositories::DatabaseRepository;
 use jetstream_oxide::events::commit::{CommitData, CommitEvent};
 use jetstream_oxide::events::EventInfo;
-use paris::info;
 use std::fmt::Display;
 use std::sync::Arc;
 
@@ -14,20 +13,6 @@ enum AppBskyEventRecord {
     Post,
     Like,
     Repost,
-}
-
-impl AppBskyEventRecord {
-    fn from_string(record: &str) -> Self {
-        match record {
-            "app.bsky.feed.post" => AppBskyEventRecord::Post,
-            "app.bsky.feed.like" => AppBskyEventRecord::Like,
-            "app.bsky.feed.repost" => AppBskyEventRecord::Repost,
-            _ => {
-                info!("Unknown collection: {}", record);
-                AppBskyEventRecord::Post
-            }
-        }
-    }
 }
 
 impl Display for AppBskyEventRecord {
@@ -40,7 +25,7 @@ impl Display for AppBskyEventRecord {
     }
 }
 
-struct CreateEventPayload {
+pub struct CreateEventPayload {
     event_info: EventInfo,
     commit_data: CommitData,
 }
@@ -66,6 +51,8 @@ pub async fn events_handler(repository: &Arc<DatabaseRepository>, commit: Commit
         CommitEvent::Delete { .. } => {
             // delete_event_handler(repository, info, commit).await;
         }
-        _ => {}
+        CommitEvent::Update { .. } => {
+            // update_event_handler(repository, info, commit).await;
+        }
     }
 }
