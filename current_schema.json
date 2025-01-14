@@ -1,5 +1,38 @@
 {
   "tables": {
+    "characters_experience": {
+      "fields": [
+        [
+          "current_experience",
+          "counter",
+          false
+        ],
+        [
+          "user_id",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "user_id",
+        "current_experience"
+      ],
+      "types_by_name": {
+        "user_id": "text",
+        "current_experience": "counter"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "user_id"
+      ],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
     "user_events": {
       "fields": [
         [
@@ -23,31 +56,31 @@
           false
         ],
         [
-          "user_id",
-          "text",
+          "leveling_state",
+          "leveling",
           false
         ],
         [
-          "xp",
-          "int",
+          "user_id",
+          "text",
           false
         ]
       ],
       "field_names": [
-        "xp",
+        "user_id",
         "event_data",
         "event_type",
         "event_at",
-        "user_id",
-        "event_id"
+        "event_id",
+        "leveling_state"
       ],
       "types_by_name": {
+        "event_id": "text",
+        "leveling_state": "leveling",
+        "user_id": "text",
         "event_at": "timestamp",
         "event_data": "frozen<map<text, text>>",
-        "event_type": "text",
-        "xp": "int",
-        "event_id": "text",
-        "user_id": "text"
+        "event_type": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -64,54 +97,11 @@
       "local_secondary_indexes": [],
       "table_options": null
     },
-    "characters_experience": {
-      "fields": [
-        [
-          "current_experience",
-          "counter",
-          false
-        ],
-        [
-          "user_id",
-          "text",
-          false
-        ]
-      ],
-      "field_names": [
-        "user_id",
-        "current_experience"
-      ],
-      "types_by_name": {
-        "current_experience": "counter",
-        "user_id": "text"
-      },
-      "type_name": "",
-      "table_name": "",
-      "base_table": "",
-      "partition_keys": [
-        "user_id"
-      ],
-      "clustering_keys": [],
-      "static_columns": [],
-      "global_secondary_indexes": [],
-      "local_secondary_indexes": [],
-      "table_options": null
-    },
     "characters": {
       "fields": [
         [
-          "current_experience",
-          "int",
-          false
-        ],
-        [
-          "experience_to_next_level",
-          "int",
-          false
-        ],
-        [
-          "level",
-          "int",
+          "leveling",
+          "leveling",
           false
         ],
         [
@@ -126,18 +116,14 @@
         ]
       ],
       "field_names": [
-        "experience_to_next_level",
-        "level",
-        "user_id",
-        "current_experience",
-        "name"
+        "leveling",
+        "name",
+        "user_id"
       ],
       "types_by_name": {
-        "name": "text",
-        "experience_to_next_level": "int",
-        "level": "int",
-        "current_experience": "int",
-        "user_id": "text"
+        "leveling": "leveling",
+        "user_id": "text",
+        "name": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -152,73 +138,60 @@
       "table_options": null
     }
   },
-  "udts": {},
-  "materialized_views": {
-    "user_events_by_bluesky_id": {
+  "udts": {
+    "leveling": {
       "fields": [
         [
-          "event_at",
-          "timestamp",
-          false
-        ],
-        [
-          "event_data",
-          "frozen<map<text, text>>",
-          false
-        ],
-        [
-          "event_id",
-          "text",
-          false
-        ],
-        [
-          "event_type",
-          "text",
-          false
-        ],
-        [
-          "user_id",
-          "text",
-          false
-        ],
-        [
-          "xp",
+          "level",
           "int",
+          false
+        ],
+        [
+          "experience",
+          "int",
+          false
+        ],
+        [
+          "experience_to_next_level",
+          "int",
+          false
+        ],
+        [
+          "levels_gained",
+          "int",
+          false
+        ],
+        [
+          "progress_percentage",
+          "float",
           false
         ]
       ],
       "field_names": [
-        "xp",
-        "event_id",
-        "event_data",
-        "event_at",
-        "event_type",
-        "user_id"
+        "progress_percentage",
+        "level",
+        "levels_gained",
+        "experience",
+        "experience_to_next_level"
       ],
       "types_by_name": {
-        "user_id": "text",
-        "event_data": "frozen<map<text, text>>",
-        "xp": "int",
-        "event_at": "timestamp",
-        "event_id": "text",
-        "event_type": "text"
+        "progress_percentage": "float",
+        "experience_to_next_level": "int",
+        "level": "int",
+        "levels_gained": "int",
+        "experience": "int"
       },
       "type_name": "",
       "table_name": "",
       "base_table": "",
-      "partition_keys": [
-        "event_id"
-      ],
-      "clustering_keys": [
-        "event_at",
-        "event_type",
-        "user_id"
-      ],
+      "partition_keys": [],
+      "clustering_keys": [],
       "static_columns": [],
       "global_secondary_indexes": [],
       "local_secondary_indexes": [],
       "table_options": null
     }
   },
+  "materialized_views": {},
   "keyspace_name": "bsky_rpg"
 }

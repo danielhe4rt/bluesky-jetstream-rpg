@@ -1,6 +1,6 @@
 use crate::events::events_handler;
 use crate::repositories::DatabaseRepository;
-use atrium_api::types::string::Nsid;
+use atrium_api::types::string::{Did, Nsid};
 use jetstream_oxide::events::JetstreamEvent::Commit;
 use jetstream_oxide::{
     DefaultJetstreamEndpoints, JetstreamCompression, JetstreamConfig, JetstreamConnector,
@@ -17,7 +17,7 @@ pub async fn start_jetstream(repository: &Arc<DatabaseRepository>) {
             Nsid::new("app.bsky.feed.repost".to_string()).expect("Failed to create NSID"),
         ],
         wanted_dids: vec![
-            //Did::new("did:plc:doqrpcaai4iqmkbdo3ztmlld".to_string()).expect("Failed to create DID"),
+            Did::new("did:plc:doqrpcaai4iqmkbdo3ztmlld".to_string()).expect("Failed to create DID"),
         ],
         compression: JetstreamCompression::Zstd,
         cursor: None,

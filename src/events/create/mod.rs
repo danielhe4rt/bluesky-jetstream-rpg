@@ -60,13 +60,13 @@ trait CreateEventHandler {
                     .character
                     .increment_character_experience(
                         character_experience,
-                        character.current_experience as i64,
+                        character.leveling.experience as i64,
                     )
                     .await;
 
                 CharacterExperience {
                     user_id: payload.user_did.clone(),
-                    current_experience: Counter(character.current_experience as i64),
+                    current_experience: Counter(character.leveling.experience as i64),
                 }
             }
         };
@@ -84,7 +84,7 @@ trait CreateEventHandler {
 
         repository
             .event
-            .insert_event(payload, &leveling_response_dto)
+            .insert_event(payload, leveling_response_dto.clone())
             .await;
 
         // persist the changes

@@ -1,5 +1,5 @@
 use crate::leveling::LevelResponse;
-use crate::models::character::Character;
+use crate::models::character::{Character, Leveling};
 use crate::models::CharacterExperience;
 use charybdis::operations::{Find, Insert};
 use charybdis::types::Counter;
@@ -58,9 +58,7 @@ impl CharacterRepository {
     }
 
     pub async fn update_character(&self, character: &mut Character, response: LevelResponse) {
-        character.level = response.level;
-        character.current_experience = response.experience;
-        character.experience_to_next_level = response.experience_to_next_level;
+        character.leveling = Leveling::from(response);
         character
             .insert()
             .execute(&self.session)

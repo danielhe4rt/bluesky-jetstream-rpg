@@ -39,7 +39,7 @@ pub async fn handle(
                 .character
                 .increment_character_experience(
                     character_experience,
-                    character.current_experience as i64,
+                    character.leveling.experience as i64,
                 )
                 .await;
 
