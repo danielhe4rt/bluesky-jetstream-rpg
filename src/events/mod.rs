@@ -8,6 +8,7 @@ use jetstream_oxide::events::commit::{CommitData, CommitEvent};
 use jetstream_oxide::events::EventInfo;
 use std::fmt::Display;
 use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 enum AppBskyEventRecord {
     Post,
@@ -39,14 +40,19 @@ impl CreateEventPayload {
     }
 }
 
-pub async fn events_handler(repository: &Arc<DatabaseRepository>, commit: CommitEvent) {
+pub async fn events_handler(
+    repository: &Arc<DatabaseRepository>,
+    commit: CommitEvent,
+    semaphore: Arc<Semaphore>,
+) {
     match commit {
         CommitEvent::Create {
             info: user_info,
             commit,
         } => {
             let payload = CreateEventPayload::new(user_info, commit);
-            create_event_handler(repository, payload).await;
+
+            create_event_handler(repository, payload, semaphore).await;
         }
         CommitEvent::Delete { .. } => {
             // delete_event_handler(repository, info, commit).await;

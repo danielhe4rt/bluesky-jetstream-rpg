@@ -7,6 +7,7 @@ use jetstream_oxide::{
 };
 use paris::info;
 use std::sync::Arc;
+use tokio::sync::Semaphore;
 
 pub async fn start_jetstream(repository: &Arc<DatabaseRepository>) {
     let config = JetstreamConfig {
@@ -31,9 +32,11 @@ pub async fn start_jetstream(repository: &Arc<DatabaseRepository>) {
 
     info!("Starting Jetstream listener");
 
+    let semaphore = Arc::new(Semaphore::new(100));
+
     while let Ok(event) = receiver.recv_async().await {
         if let Commit(commit) = event {
-            events_handler(repository, commit).await;
+            events_handler(repository, commit, Arc::clone(&semaphore)).await;
         }
     }
 }

@@ -12,6 +12,7 @@ use atrium_api::record::KnownRecord::AppBskyFeedPost;
 use charybdis::types::Counter;
 use paris::info;
 use std::sync::Arc;
+use tokio::sync::Semaphore;
 use KnownRecord::{AppBskyFeedLike, AppBskyFeedRepost};
 
 pub mod create_post;
@@ -102,10 +103,13 @@ trait CreateEventHandler {
 pub async fn create_event_handler(
     repository: &Arc<DatabaseRepository>,
     payload: CreateEventPayload,
+    semaphore: Arc<Semaphore>,
 ) {
     let event_payload = NewEventDTO::from(&payload);
 
     let repo = Arc::clone(repository);
+    let permit = semaphore.acquire_owned().await.unwrap(); // Acquire a semaphore permit
+
     tokio::spawn(async move {
         let response = select_event_handler(&payload.commit_data.record)
             .handle(&repo, &event_payload)
@@ -114,6 +118,7 @@ pub async fn create_event_handler(
             "[Created][{}] User {} gained {} experience",
             event_payload.event_type, event_payload.user_did, response.experience
         );
+        drop(permit); // Release the semaphore permit
     });
 }
 
