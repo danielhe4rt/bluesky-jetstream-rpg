@@ -1,6 +1,7 @@
 use crate::http::AppState;
 use crate::models::character::Character;
-use crate::models::CharacterExperience;
+
+use crate::models::character_experience::CharacterExperience;
 use actix_web::{get, web, HttpResponse, Responder};
 use charybdis::types::Counter;
 use paris::info;
@@ -31,7 +32,7 @@ pub async fn handle(
             let character = Character::from(response);
 
             let character_experience = CharacterExperience {
-                user_id: profile_did.clone(),
+                user_did: profile_did.clone(),
                 current_experience: Counter(0),
             };
 
@@ -39,7 +40,7 @@ pub async fn handle(
                 .character
                 .increment_character_experience(
                     character_experience,
-                    character.leveling.experience as i64,
+                    character.leveling_state.experience as i64,
                 )
                 .await;
 
