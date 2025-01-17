@@ -7,6 +7,7 @@ mod leveling;
 mod models;
 mod repositories;
 
+use events::create::services::initialize_nlp_services;
 use paris::Logger;
 use scylla::{CachingSession, SessionBuilder};
 
@@ -21,7 +22,7 @@ use tokio::task::JoinSet;
 async fn main() {
     Logger::new();
     env_logger::init();
-
+    let _ = initialize_nlp_services().await;
     let session = start_scylla_session().await;
     let caching_session = Arc::new(CachingSession::from(session, 50));
 

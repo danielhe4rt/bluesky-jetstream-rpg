@@ -1,10 +1,11 @@
 use std::default;
 
+use crate::events::create::services::NLP_SERVICES;
 use crate::leveling::get_base_level_from_bsky_profile;
 use crate::models::udts::leveling::Leveling;
 use atrium_api::app::bsky::actor::defs::ProfileViewDetailed;
 use charybdis::macros::{charybdis_model, charybdis_udt_model};
-use charybdis::types::{Frozen, Int, Text};
+use charybdis::types::{Counter, Frozen, Int, Text};
 use harper_core::linting::{Linter, SpellCheck};
 use harper_core::{Document, FullDictionary};
 use rust_bert::pipelines::sentiment::{Sentiment, SentimentModel, SentimentPolarity};
@@ -21,6 +22,7 @@ pub struct Character {
     pub name: Text,               // handle
     pub leveling_state: Leveling, // udt leveling state
     pub alignment: UserAlignment,
+    pub posts_count: Int,
 }
 
 impl From<ProfileViewDetailed> for Character {
@@ -32,6 +34,7 @@ impl From<ProfileViewDetailed> for Character {
             name: response.handle.clone().to_string(),
             leveling_state: Leveling::from(level_response),
             alignment: UserAlignment::new(),
+            posts_count: 0,
         }
     }
 }
@@ -70,97 +73,87 @@ impl UserAlignment {
     }
 
     pub async fn update_alignment_from_text(&mut self, text: Option<&String>) {
-        if text.is_none() {
-            return;
-        }
-        let copy = text.unwrap().clone();
+        if let Some(text) = text {
+            let nlp_services = NLP_SERVICES
+                .get()
+                .expect("NLP services are not initialized");
 
-        let result = tokio::task::spawn_blocking(move || {
-            let sentiment_classifier = SentimentModel::new(Default::default()).unwrap();
-            sentiment_classifier.predict(vec![copy.as_str()])
-        })
-        .await
-        .unwrap();
+            let result = {
+                let model = nlp_services.sentiment_model.lock().await;
+                model.predict(vec![text.as_str()])
+            };
 
-        println!("{:?}", self.current_align);
+            println!("{:?}", self.current_align);
 
-        match *result.first().unwrap() {
-            Sentiment {
-                polarity: SentimentPolarity::Positive,
-                score,
-            } => {
-                let points = (score * 100.0) as i32;
+            match *result.first().unwrap() {
+                Sentiment {
+                    polarity: SentimentPolarity::Positive,
+                    score,
+                } => {
+                    let points = (score * 100.0) as i32;
 
-                self.moral.good += points;
-                self.moral.evil = (self.moral.evil - (points / 4)).max(0);
+                    self.moral.good += points;
+                    self.moral.evil = (self.moral.evil - (points / 4)).max(0);
 
-                // If score is very high, reduce neutral slightly
-                if score > 0.7 {
-                    self.moral.neutral = (self.moral.neutral - (points / 6)).max(0);
+                    // If score is very high, reduce neutral slightly
+                    if score > 0.7 {
+                        self.moral.neutral = (self.moral.neutral - (points / 6)).max(0);
+                    }
+                }
+                Sentiment {
+                    polarity: SentimentPolarity::Negative,
+                    score,
+                } => {
+                    let points = (score * 100.0) as i32;
+
+                    self.moral.evil += points;
+                    self.moral.good = (self.moral.good - (points / 4)).max(0);
+
+                    // If score is very high, reduce neutral slightly
+                    if score > 0.7 {
+                        self.moral.neutral = (self.moral.neutral - (points / 6)).max(0);
+                    }
                 }
             }
-            Sentiment {
-                polarity: SentimentPolarity::Negative,
-                score,
-            } => {
-                let points = (score * 100.0) as i32;
 
-                self.moral.evil += points;
-                self.moral.good = (self.moral.good - (points / 4)).max(0);
+            // Get spell check results
+            let lints = {
+                let mut spell_cheker = nlp_services.spellcheck.lock().await;
 
-                // If score is very high, reduce neutral slightly
-                if score > 0.7 {
-                    self.moral.neutral = (self.moral.neutral - (points / 6)).max(0);
+                spell_cheker.check(text.to_string()).await
+            };
+            println!("Lints: {lints:?}\nLints Len: {}", lints.len());
+            match lints.len() {
+                0..=6 => {
+                    // Almost no mistakes - lawful behavior
+                    let points = 15;
+                    self.ethical.lawful += points;
+                    self.ethical.chaotic = (self.ethical.chaotic - (points / 4)).max(0);
+                }
+                7..=9 => {
+                    // Moderate mistakes - more chaotic
+                    let points = 25;
+                    self.ethical.chaotic += points;
+                    self.ethical.lawful = (self.ethical.lawful - (points / 3)).max(0);
+                    // Also reduce neutral slightly
+                    self.ethical.neutral = (self.ethical.neutral - (points / 6)).max(0);
+                }
+                _ => {
+                    // Many mistakes - very chaotic
+                    let points = 40;
+                    self.ethical.chaotic += points;
+                    self.ethical.lawful = (self.ethical.lawful - (points / 2)).max(0);
+                    // Reduce neutral more significantly
+                    self.ethical.neutral = (self.ethical.neutral - (points / 4)).max(0);
                 }
             }
+
+            println!("{:?}", self.current_align);
+
+            self.update_current_alignment();
+
+            println!("{:?}", self.current_align);
         }
-
-        // TODO: update ethical from text
-
-        let dict = FullDictionary::new();
-        let mut spell_check = SpellCheck::new(dict);
-
-        let lints = spell_check.lint(&Document::new_plain_english(
-            text.unwrap().as_str(),
-            &FullDictionary::new(),
-        ));
-
-        match lints.len() {
-            i if i > 0 && i < 3 => {
-                // Minor mistakes - slightly chaotic
-                let points = 10;
-                self.ethical.chaotic += points;
-                self.ethical.lawful = (self.ethical.lawful - (points / 4)).max(0);
-            }
-            i if i >= 3 && i <= 5 => {
-                // Moderate mistakes - more chaotic
-                let points = 25;
-                self.ethical.chaotic += points;
-                self.ethical.lawful = (self.ethical.lawful - (points / 3)).max(0);
-                // Also reduce neutral slightly
-                self.ethical.neutral = (self.ethical.neutral - (points / 6)).max(0);
-            }
-            i if i > 5 => {
-                // Many mistakes - very chaotic
-                let points = 40;
-                self.ethical.chaotic += points;
-                self.ethical.lawful = (self.ethical.lawful - (points / 2)).max(0);
-                // Reduce neutral more significantly
-                self.ethical.neutral = (self.ethical.neutral - (points / 4)).max(0);
-            }
-            _ => {
-                // No mistakes - lawful behavior
-                let points = 15;
-                self.ethical.lawful += points;
-                self.ethical.chaotic = (self.ethical.chaotic - (points / 4)).max(0);
-            }
-        }
-
-        println!("{:?}", self.current_align);
-
-        self.update_current_alignment();
-
-        println!("{:?}", self.current_align);
     }
 
     fn update_current_alignment(&mut self) {

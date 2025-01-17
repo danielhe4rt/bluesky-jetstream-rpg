@@ -8,24 +8,24 @@
           false
         ],
         [
-          "user_id",
+          "user_did",
           "text",
           false
         ]
       ],
       "field_names": [
-        "user_id",
-        "current_experience"
+        "current_experience",
+        "user_did"
       ],
       "types_by_name": {
-        "user_id": "text",
-        "current_experience": "counter"
+        "current_experience": "counter",
+        "user_did": "text"
       },
       "type_name": "",
       "table_name": "",
       "base_table": "",
       "partition_keys": [
-        "user_id"
+        "user_did"
       ],
       "clustering_keys": [],
       "static_columns": [],
@@ -33,7 +33,61 @@
       "local_secondary_indexes": [],
       "table_options": null
     },
-    "user_events": {
+    "characters": {
+      "fields": [
+        [
+          "alignment",
+          "useralignment",
+          false
+        ],
+        [
+          "leveling_state",
+          "leveling",
+          false
+        ],
+        [
+          "name",
+          "text",
+          false
+        ],
+        [
+          "posts_count",
+          "int",
+          false
+        ],
+        [
+          "user_did",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "leveling_state",
+        "posts_count",
+        "user_did",
+        "alignment",
+        "name"
+      ],
+      "types_by_name": {
+        "posts_count": "int",
+        "name": "text",
+        "alignment": "useralignment",
+        "leveling_state": "leveling",
+        "user_did": "text"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "user_did"
+      ],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "events": {
       "fields": [
         [
           "event_at",
@@ -61,77 +115,36 @@
           false
         ],
         [
-          "user_id",
+          "user_did",
           "text",
           false
         ]
       ],
       "field_names": [
-        "user_id",
-        "event_data",
         "event_type",
-        "event_at",
+        "user_did",
         "event_id",
+        "event_at",
+        "event_data",
         "leveling_state"
       ],
       "types_by_name": {
         "event_id": "text",
-        "leveling_state": "leveling",
-        "user_id": "text",
-        "event_at": "timestamp",
+        "event_type": "text",
         "event_data": "frozen<map<text, text>>",
-        "event_type": "text"
+        "leveling_state": "leveling",
+        "event_at": "timestamp",
+        "user_did": "text"
       },
       "type_name": "",
       "table_name": "",
       "base_table": "",
       "partition_keys": [
-        "user_id"
+        "user_did"
       ],
       "clustering_keys": [
-        "event_at",
-        "event_type"
+        "event_at"
       ],
-      "static_columns": [],
-      "global_secondary_indexes": [],
-      "local_secondary_indexes": [],
-      "table_options": null
-    },
-    "characters": {
-      "fields": [
-        [
-          "leveling",
-          "leveling",
-          false
-        ],
-        [
-          "name",
-          "text",
-          false
-        ],
-        [
-          "user_id",
-          "text",
-          false
-        ]
-      ],
-      "field_names": [
-        "leveling",
-        "name",
-        "user_id"
-      ],
-      "types_by_name": {
-        "leveling": "leveling",
-        "user_id": "text",
-        "name": "text"
-      },
-      "type_name": "",
-      "table_name": "",
-      "base_table": "",
-      "partition_keys": [
-        "user_id"
-      ],
-      "clustering_keys": [],
       "static_columns": [],
       "global_secondary_indexes": [],
       "local_secondary_indexes": [],
@@ -139,6 +152,82 @@
     }
   },
   "udts": {
+    "moralaxis": {
+      "fields": [
+        [
+          "good",
+          "int",
+          false
+        ],
+        [
+          "neutral",
+          "int",
+          false
+        ],
+        [
+          "evil",
+          "int",
+          false
+        ]
+      ],
+      "field_names": [
+        "evil",
+        "good",
+        "neutral"
+      ],
+      "types_by_name": {
+        "evil": "int",
+        "good": "int",
+        "neutral": "int"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "ethicalaxis": {
+      "fields": [
+        [
+          "lawful",
+          "int",
+          false
+        ],
+        [
+          "neutral",
+          "int",
+          false
+        ],
+        [
+          "chaotic",
+          "int",
+          false
+        ]
+      ],
+      "field_names": [
+        "neutral",
+        "chaotic",
+        "lawful"
+      ],
+      "types_by_name": {
+        "chaotic": "int",
+        "lawful": "int",
+        "neutral": "int"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
     "leveling": {
       "fields": [
         [
@@ -168,18 +257,56 @@
         ]
       ],
       "field_names": [
-        "progress_percentage",
+        "experience",
         "level",
         "levels_gained",
-        "experience",
-        "experience_to_next_level"
+        "experience_to_next_level",
+        "progress_percentage"
       ],
       "types_by_name": {
-        "progress_percentage": "float",
+        "levels_gained": "int",
+        "experience": "int",
         "experience_to_next_level": "int",
         "level": "int",
-        "levels_gained": "int",
-        "experience": "int"
+        "progress_percentage": "float"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [],
+      "clustering_keys": [],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    },
+    "useralignment": {
+      "fields": [
+        [
+          "moral",
+          "frozen<moralaxis>",
+          false
+        ],
+        [
+          "ethical",
+          "frozen<ethicalaxis>",
+          false
+        ],
+        [
+          "current_align",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "current_align",
+        "moral",
+        "ethical"
+      ],
+      "types_by_name": {
+        "ethical": "frozen<ethicalaxis>",
+        "moral": "frozen<moralaxis>",
+        "current_align": "text"
       },
       "type_name": "",
       "table_name": "",
@@ -192,6 +319,71 @@
       "table_options": null
     }
   },
-  "materialized_views": {},
+  "materialized_views": {
+    "events_by_type": {
+      "fields": [
+        [
+          "event_at",
+          "timestamp",
+          false
+        ],
+        [
+          "event_data",
+          "frozen<map<text, text>>",
+          false
+        ],
+        [
+          "event_id",
+          "text",
+          false
+        ],
+        [
+          "event_type",
+          "text",
+          false
+        ],
+        [
+          "leveling_state",
+          "leveling",
+          false
+        ],
+        [
+          "user_did",
+          "text",
+          false
+        ]
+      ],
+      "field_names": [
+        "event_data",
+        "user_did",
+        "event_at",
+        "event_id",
+        "event_type",
+        "leveling_state"
+      ],
+      "types_by_name": {
+        "event_at": "timestamp",
+        "event_id": "text",
+        "event_data": "frozen<map<text, text>>",
+        "event_type": "text",
+        "leveling_state": "leveling",
+        "user_did": "text"
+      },
+      "type_name": "",
+      "table_name": "",
+      "base_table": "",
+      "partition_keys": [
+        "event_type",
+        "user_did"
+      ],
+      "clustering_keys": [
+        "event_at"
+      ],
+      "static_columns": [],
+      "global_secondary_indexes": [],
+      "local_secondary_indexes": [],
+      "table_options": null
+    }
+  },
   "keyspace_name": "bsky_rpg"
 }

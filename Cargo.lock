@@ -542,6 +542,7 @@ dependencies = [
  "harper-core",
  "jetstream-oxide",
  "log",
+ "once_cell",
  "paris",
  "reqwest 0.12.12",
  "rust-bert",

@@ -4,7 +4,7 @@ use crate::events::create::repost::RepostEvent;
 use crate::events::dto::NewEventDTO;
 use crate::events::CreateEventPayload;
 use crate::leveling::{calculate_experience, LevelResponse};
-use crate::models::character::Character;
+use crate::models::character::{self, Character};
 use crate::models::character_experience::CharacterExperience;
 use crate::repositories::DatabaseRepository;
 use atrium_api::record::KnownRecord;
@@ -18,6 +18,7 @@ use KnownRecord::{AppBskyFeedLike, AppBskyFeedRepost};
 pub mod create_post;
 mod like_post;
 mod repost;
+pub mod services;
 
 #[async_trait::async_trait]
 trait CreateEventHandler {
@@ -43,8 +44,6 @@ trait CreateEventHandler {
                 Character::from(response)
             }
         };
-
-        character.alignment.update_alignment_from_text(payload.context.get("text")).await;
 
         let character_experience = repository
             .character
@@ -73,6 +72,16 @@ trait CreateEventHandler {
                 }
             }
         };
+
+        if character.posts_count == 3 {
+            character
+                .alignment
+                .update_alignment_from_text(payload.context.get("text"))
+                .await;
+            character.posts_count = 0;
+        }
+
+        character.posts_count += 1;
 
         // calculate the experience
         let current_experience = character_experience.get_experience();
