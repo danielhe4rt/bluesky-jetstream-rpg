@@ -44,6 +44,8 @@ trait CreateEventHandler {
             }
         };
 
+        character.alignment.update_alignment_from_text(payload.context.get("text")).await;
+
         let character_experience = repository
             .character
             .find_character_experience_by_partition_key(payload.user_did.clone())
