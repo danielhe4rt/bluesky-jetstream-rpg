@@ -77,8 +77,8 @@ The project uses ScyllaDB for database operations with the following table schem
 | Materialized View | bsky_rpg.events_by_type        | Materialized view of user events by type.     |
 | UDT               | bsky_rpg.leveling              | User leveling schema type.                    |
 
-```cassandraql
--- Create the Leveling UDT
+```cql
+-- Create the Leveling UDT -- 
 CREATE TYPE bsky_rpg.leveling
     (
         level                    int,
