@@ -1,14 +1,12 @@
 use crate::models::udts::leveling::Leveling;
-use charybdis::macros::charybdis_model;
+use charybdis::macros::charybdis_view_model;
 use charybdis::types::{Frozen, Map, Text, Timestamp};
 
-#[charybdis_model(
-    table_name = events,
-    partition_keys = [user_did],
+#[charybdis_view_model(
+    base_table = events,
+    table_name = events_by_type,
+    partition_keys = [user_did, event_type],
     clustering_keys = [event_at],
-    table_options = r#"
-          CLUSTERING ORDER BY (event_at DESC)
-    "#
 )]
 pub struct Events {
     pub user_did: Text,

@@ -1,11 +1,11 @@
 use crate::events::dto::NewEventDTO;
 use crate::leveling::LevelResponse;
-use charybdis::operations::{Find, Insert};
+use crate::models::events::Events;
+use crate::models::udts::leveling::Leveling;
+use charybdis::operations::Insert;
 use charybdis::types::Timestamp;
 use scylla::CachingSession;
 use std::sync::Arc;
-use crate::models::character::Leveling;
-use crate::models::events::EventTracker;
 
 pub struct EventRepository {
     pub session: Arc<CachingSession>,
@@ -19,8 +19,8 @@ impl EventRepository {
     }
 
     pub async fn insert_event(&self, payload: &NewEventDTO, level_response: LevelResponse) {
-        let event = EventTracker {
-            user_id: payload.user_did.to_string(),
+        let event = Events {
+            user_did: payload.user_did.to_string(),
             event_type: payload.event_type.to_string(),
             event_id: payload.event_id.to_string(),
             event_data: payload.context.clone(),
@@ -34,5 +34,4 @@ impl EventRepository {
             .await
             .expect("Failed to insert event");
     }
-
 }

@@ -5,7 +5,7 @@ use crate::events::dto::NewEventDTO;
 use crate::events::CreateEventPayload;
 use crate::leveling::{calculate_experience, LevelResponse};
 use crate::models::character::Character;
-use crate::models::CharacterExperience;
+use crate::models::character_experience::CharacterExperience;
 use crate::repositories::DatabaseRepository;
 use atrium_api::record::KnownRecord;
 use atrium_api::record::KnownRecord::AppBskyFeedPost;
@@ -53,7 +53,7 @@ trait CreateEventHandler {
             Some(character_experience) => character_experience,
             None => {
                 let character_experience = CharacterExperience {
-                    user_id: payload.user_did.clone(),
+                    user_did: payload.user_did.clone(),
                     current_experience: Counter(0),
                 };
 
@@ -61,13 +61,13 @@ trait CreateEventHandler {
                     .character
                     .increment_character_experience(
                         character_experience,
-                        character.leveling.experience as i64,
+                        character.leveling_state.experience as i64,
                     )
                     .await;
 
                 CharacterExperience {
-                    user_id: payload.user_did.clone(),
-                    current_experience: Counter(character.leveling.experience as i64),
+                    user_did: payload.user_did.clone(),
+                    current_experience: Counter(character.leveling_state.experience as i64),
                 }
             }
         };

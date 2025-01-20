@@ -1,6 +1,8 @@
 use crate::leveling::LevelResponse;
-use crate::models::character::{Character, Leveling};
-use crate::models::CharacterExperience;
+use crate::models::character::Character;
+
+use crate::models::character_experience::CharacterExperience;
+use crate::models::udts::leveling::Leveling;
 use charybdis::operations::{Find, Insert};
 use charybdis::types::Counter;
 use scylla::CachingSession;
@@ -16,9 +18,9 @@ impl CharacterRepository {
             session: connection,
         }
     }
-    pub async fn find_by_partition_key(&self, user_id: String) -> Option<Character> {
+    pub async fn find_by_partition_key(&self, user_did: String) -> Option<Character> {
         let character = Character {
-            user_id,
+            user_did,
             ..Default::default()
         };
 
@@ -31,10 +33,10 @@ impl CharacterRepository {
 
     pub async fn find_character_experience_by_partition_key(
         &self,
-        user_id: String,
+        user_did: String,
     ) -> Option<CharacterExperience> {
         let character_experience = CharacterExperience {
-            user_id,
+            user_did,
             current_experience: Counter(0),
         };
 
@@ -58,7 +60,7 @@ impl CharacterRepository {
     }
 
     pub async fn update_character(&self, character: &mut Character, response: LevelResponse) {
-        character.leveling = Leveling::from(response);
+        character.leveling_state = Leveling::from(response);
         character
             .insert()
             .execute(&self.session)
