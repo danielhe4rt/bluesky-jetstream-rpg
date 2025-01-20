@@ -6,8 +6,8 @@ mod jetstream;
 mod leveling;
 mod models;
 mod repositories;
+mod args;
 
-use paris::Logger;
 use scylla::{CachingSession, SessionBuilder};
 
 use crate::http::start_http;
@@ -16,12 +16,12 @@ use actix_web::rt::signal;
 use scylla::transport::session::{CurrentDeserializationApi, GenericSession};
 use std::sync::Arc;
 use tokio::task::JoinSet;
+use args::AppSettings;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 10)]
 async fn main() {
-    Logger::new();
-    env_logger::init();
-
+    
+    let settings = Arc::new(AppSettings::new());
     let session = start_scylla_session().await;
     let caching_session = Arc::new(CachingSession::from(session, 50));
 
@@ -32,7 +32,7 @@ async fn main() {
     let mut join = JoinSet::new();
     let jetstream_repository = Arc::clone(&repository);
     join.spawn(async move {
-        start_jetstream(&jetstream_repository).await;
+        start_jetstream(settings, &jetstream_repository).await;
     });
 
     join.spawn(async move {

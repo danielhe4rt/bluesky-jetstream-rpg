@@ -8,18 +8,21 @@ use jetstream_oxide::{
 use paris::info;
 use std::sync::Arc;
 use tokio::sync::Semaphore;
+use crate::args::AppSettings;
 
-pub async fn start_jetstream(repository: &Arc<DatabaseRepository>) {
+pub async fn start_jetstream(settings: Arc<AppSettings>, repository: &Arc<DatabaseRepository>) {
     let config = JetstreamConfig {
         endpoint: DefaultJetstreamEndpoints::USEastTwo.into(),
-        wanted_collections: vec![
-            Nsid::new("app.bsky.feed.post".to_string()).expect("Failed to create NSID"),
-            Nsid::new("app.bsky.feed.like".to_string()).expect("Failed to create NSID"),
-            Nsid::new("app.bsky.feed.repost".to_string()).expect("Failed to create NSID"),
-        ],
-        wanted_dids: vec![
-            Did::new("did:plc:doqrpcaai4iqmkbdo3ztmlld".to_string()).expect("Failed to create DID"),
-        ],
+        wanted_collections: settings
+            .bsky_topics
+            .iter()
+            .map(|s| Nsid::new(s.to_string()).expect("Failed to create NSID"))
+            .collect(),
+        wanted_dids: settings
+            .bsky_dids
+            .as_ref()
+            .map(|dids| dids.iter().map(|s| Did::new(s.to_string()).expect("Failed to create DID")).collect())
+            .unwrap_or_default(),
         compression: JetstreamCompression::Zstd,
         cursor: None,
     };
@@ -32,7 +35,7 @@ pub async fn start_jetstream(repository: &Arc<DatabaseRepository>) {
 
     info!("Starting Jetstream listener");
 
-    let semaphore = Arc::new(Semaphore::new(100));
+    let semaphore = Arc::new(Semaphore::new(settings.max_workers));
 
     while let Ok(event) = receiver.recv_async().await {
         if let Commit(commit) = event {

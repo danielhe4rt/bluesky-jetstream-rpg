@@ -2,3 +2,4 @@
 .idea
 /.idea
 current_schema.json
+.env
